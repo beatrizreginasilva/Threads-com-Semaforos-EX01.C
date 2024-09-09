@@ -1,0 +1,66 @@
+import java.util.concurrent.Semaphore;
+
+public class Multiprocessamento03 {
+    private static final int NUM_THREADS = 21;
+    private static final Semaphore semaphore = new Semaphore(1);
+
+    public static void main(String[] args) {
+        for (int i = 1; i <= NUM_THREADS; i++) {
+            new Thread(new Tarefa(i)).start();
+        }
+    }
+
+    static class Tarefa implements Runnable {
+        private final int id;
+
+        Tarefa(int id) {
+            this.id = id;
+        }
+
+        @Override
+        public void run() {
+            try {
+                if (id % 3 == 1) {
+                    // Comportamento para threads com ID % 3 == 1
+                    realizarCalculos(0.2, 1.0);
+                    realizarTransacaoBD(1);
+                    realizarCalculos(0.2, 1.0);
+                    realizarTransacaoBD(1);
+                } else if (id % 3 == 2) {
+                    // Comportamento para threads com ID % 3 == 2
+                    realizarCalculos(0.5, 1.5);
+                    realizarTransacaoBD(1.5);
+                    realizarCalculos(0.5, 1.5);
+                    realizarTransacaoBD(1.5);
+                    realizarCalculos(0.5, 1.5);
+                    realizarTransacaoBD(1.5);
+                } else if (id % 3 == 0) {
+                    // Comportamento para threads com ID % 3 == 0
+                    realizarCalculos(1.0, 2.0);
+                    realizarTransacaoBD(1.5);
+                    realizarCalculos(1.0, 2.0);
+                    realizarTransacaoBD(1.5);
+                    realizarCalculos(1.0, 2.0);
+                    realizarTransacaoBD(1.5);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        private void realizarCalculos(double min, double max) throws InterruptedException {
+            double tempo = min + (max - min) * Math.random();
+            Thread.sleep((long) (tempo * 1000));
+        }
+
+        private void realizarTransacaoBD(double duracao) throws InterruptedException {
+            semaphore.acquire();
+            try {
+                System.out.println("Thread " + id + " realizando transação no banco de dados por " + duracao + " segundos.");
+                Thread.sleep((long) (duracao * 1000)); // Simula a transação
+            } finally {
+                semaphore.release();
+            }
+        }
+    }
+}
